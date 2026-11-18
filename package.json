@@ -1,0 +1,31 @@
+{
+  "name": "daisyui-astro",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "DaisyUI components for Astro, providing 1:1 parity with Drupal daisyui-sdc",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/components/*"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "astro check",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "peerDependencies": {
+    "astro": ">=4.0.0"
+  },
+  "keywords": [
+    "astro",
+    "daisyui",
+    "sdc",
+    "drupal",
+    "components"
+  ],
+  "author": "Juc1",
+  "license": "MIT"
+}

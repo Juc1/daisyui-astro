@@ -4,7 +4,7 @@
  *
  * This package mirrors the Drupal 11 Single Directory Components (SDC) from daisyui-sdc:
  * - daisy-badge
- * - daisy-button
+ * - daisy-button (ported)
  * - daisy-card-pricing
  * - daisy-card-teaser
  * - daisy-card-testimonial
@@ -18,9 +18,11 @@
  * - theme_controller
  * - theme_controller_circles
  * - theme_controller_toggle
- *
- * Components will be re-exported here as they are ported from daisyui-sdc.
  */
 
-// Placeholder export for initial library scaffolding
+// Export DaisyButton component and its TypeScript prop types
+export { default as DaisyButton } from './components/DaisyButton.astro';
+export type { Props as DaisyButtonProps } from './components/DaisyButton.astro';
+
+// Package version
 export const VERSION = '0.1.0';

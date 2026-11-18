@@ -1,0 +1,260 @@
+---
+/**
+ * @file DaisyButton.astro
+ * @description Universal DaisyUI button component providing 1:1 parity with Drupal SDC
+ * `daisyui_sdc:daisy-button`.
+ *
+ * Supports semantic color themes (primary, secondary, etc.), appearance modifiers
+ * (outline, soft, dash), sizing (xs to xl), shapes (square, circle, block, wide),
+ * tooltip wrapper, accessible attributes, and conditional rendering as either an <a> link
+ * or a native <button>.
+ */
+
+export interface Props {
+  /** Text label displayed inside the button (default: "Button") */
+  label?: string;
+  /** Optional URL. If provided, renders an <a> link; otherwise renders a <button> */
+  url?: string;
+  /** DaisyUI semantic color token (default: "primary") */
+  style?:
+    | 'primary'
+    | 'secondary'
+    | 'accent'
+    | 'neutral'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'ghost'
+    | 'link';
+  /** Visual appearance style (default: "solid") */
+  variant?: 'solid' | 'outline' | 'soft' | 'dash';
+  /** Button size token (default: "md") */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Shape and width modifier (default: "default") */
+  shape?: 'default' | 'wide' | 'equal' | 'block' | 'square' | 'circle';
+  /** Corner rounding (default: "default") */
+  radius?: 'default' | 'none';
+  /** Optional icon name */
+  icon?: string;
+  /** Icon position relative to the label (default: "start") */
+  icon_position?: 'start' | 'end';
+  /** Tooltip text displayed on hover */
+  tooltip?: string;
+  /** Open link in new tab with secure attributes (default: false) */
+  open_in_new_tab?: boolean;
+  /** Disables button interaction and applies disabled styling (default: false) */
+  disabled?: boolean;
+  /** HTML button type when rendered as <button> (default: "button") */
+  button_type?: 'button' | 'submit' | 'reset';
+  /** Accessible label for assistive technology (recommended for icon-only buttons) */
+  aria_label?: string;
+  /** Standard HTML title hover attribute */
+  title?: string;
+  /** Optional theme override token (data-theme) */
+  data_theme?: string;
+  /** Additional CSS classes */
+  class?: string;
+  /** SDC prop compatibility alias for class */
+  button_classes?: string;
+}
+
+const {
+  label = 'Button',
+  url,
+  style = 'primary',
+  variant = 'solid',
+  size = 'md',
+  shape = 'default',
+  radius = 'default',
+  icon,
+  icon_position = 'start',
+  tooltip,
+  open_in_new_tab = false,
+  disabled = false,
+  button_type = 'button',
+  aria_label,
+  title,
+  data_theme,
+  class: className = '',
+  button_classes = '',
+} = Astro.props;
+
+// Determine if we are rendering a link (<a>) or a button (<button>)
+const hasUrl = Boolean(url && url !== 'No URL' && url.trim().length > 0);
+
+// Map style prop to DaisyUI semantic color classes
+const styleClasses: Record<string, string> = {
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  accent: 'btn-accent',
+  neutral: 'btn-neutral',
+  info: 'btn-info',
+  success: 'btn-success',
+  warning: 'btn-warning',
+  error: 'btn-error',
+  ghost: 'btn-ghost',
+  link: 'btn-link',
+};
+
+// Map variant prop to DaisyUI modifier classes (e.g. outline, soft tint, dash)
+const variantClasses: Record<string, string> = {
+  solid: '',
+  outline: 'btn-outline',
+  soft: 'btn-soft',
+  dash: 'btn-dash',
+};
+
+// Map size prop to DaisyUI size classes
+const sizeClasses: Record<string, string> = {
+  xs: 'btn-xs',
+  sm: 'btn-sm',
+  md: '',
+  lg: 'btn-lg',
+  xl: 'btn-xl',
+};
+
+// Map shape prop to DaisyUI layout and shape classes
+const shapeClasses: Record<string, string> = {
+  default: '',
+  wide: 'btn-wide',
+  equal: 'flex-1 w-full',
+  block: 'btn-block',
+  square: 'btn-square',
+  circle: 'btn-circle',
+};
+
+// Map radius prop to corner rounding classes
+const radiusClasses: Record<string, string> = {
+  default: '',
+  none: 'rounded-none',
+};
+
+// Assemble the combined class list matching daisy-button.twig
+const buttonClassesList = [
+  'btn',
+  'no-underline!',
+  'whitespace-nowrap',
+  styleClasses[style] || 'btn-primary',
+  variantClasses[variant] || '',
+  sizeClasses[size] || '',
+  shapeClasses[shape] || '',
+  radiusClasses[radius] || '',
+  hasUrl && disabled ? 'btn-disabled pointer-events-none' : '',
+  className,
+  button_classes,
+]
+  .filter(Boolean)
+  .join(' ');
+
+// Tooltip wrapper container classes
+const tooltipClasses = [
+  'tooltip',
+  'flex-1',
+  'flex',
+  shape === 'block' ? 'w-full block' : '',
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+{/* If tooltip is specified, wrap the button in a DaisyUI tooltip container */}
+{
+  tooltip ? (
+    <span class={tooltipClasses} data-tip={tooltip}>
+      {hasUrl ? (
+        <a
+          href={url}
+          class={buttonClassesList}
+          target={open_in_new_tab ? '_blank' : undefined}
+          rel={open_in_new_tab ? 'noopener noreferrer' : undefined}
+          aria-disabled={disabled ? 'true' : undefined}
+          tabindex={disabled ? -1 : undefined}
+          aria-label={aria_label}
+          title={title}
+          data-theme={data_theme}
+        >
+          {icon && icon_position === 'start' && (
+            <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+              {icon}
+            </span>
+          )}
+          <slot>{label && <span>{label}</span>}</slot>
+          {icon && icon_position === 'end' && (
+            <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+              {icon}
+            </span>
+          )}
+        </a>
+      ) : (
+        <button
+          type={button_type}
+          class={buttonClassesList}
+          disabled={disabled}
+          aria-disabled={disabled ? 'true' : undefined}
+          aria-label={aria_label}
+          title={title}
+          data-theme={data_theme}
+        >
+          {icon && icon_position === 'start' && (
+            <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+              {icon}
+            </span>
+          )}
+          <slot>{label && <span>{label}</span>}</slot>
+          {icon && icon_position === 'end' && (
+            <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+              {icon}
+            </span>
+          )}
+        </button>
+      )}
+    </span>
+  ) : hasUrl ? (
+    <a
+      href={url}
+      class={buttonClassesList}
+      target={open_in_new_tab ? '_blank' : undefined}
+      rel={open_in_new_tab ? 'noopener noreferrer' : undefined}
+      aria-disabled={disabled ? 'true' : undefined}
+      tabindex={disabled ? -1 : undefined}
+      aria-label={aria_label}
+      title={title}
+      data-theme={data_theme}
+    >
+      {icon && icon_position === 'start' && (
+        <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <slot>{label && <span>{label}</span>}</slot>
+      {icon && icon_position === 'end' && (
+        <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+    </a>
+  ) : (
+    <button
+      type={button_type}
+      class={buttonClassesList}
+      disabled={disabled}
+      aria-disabled={disabled ? 'true' : undefined}
+      aria-label={aria_label}
+      title={title}
+      data-theme={data_theme}
+    >
+      {icon && icon_position === 'start' && (
+        <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <slot>{label && <span>{label}</span>}</slot>
+      {icon && icon_position === 'end' && (
+        <span class="inline-flex size-[1.15em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+    </button>
+  )
+}

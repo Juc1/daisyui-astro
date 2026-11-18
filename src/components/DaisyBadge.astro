@@ -1,0 +1,156 @@
+---
+/**
+ * @file DaisyBadge.astro
+ * @description Universal DaisyUI badge component with 1:1 parity with Drupal SDC `daisyui_sdc:daisy-badge`.
+ *
+ * Supports semantic colors (primary, secondary, muted surface, etc.), style modifiers
+ * (solid, outline, soft, dash), sizes (xs to xl), text color overrides, links vs spans,
+ * and slot or label content.
+ */
+
+export interface Props {
+  /** Text label displayed inside badge (default: "Badge") */
+  label?: string;
+  /** Optional link destination URL. If provided, renders an <a>; otherwise renders a <span> */
+  url?: string;
+  /** Open link in new tab with secure attributes (rel="noopener noreferrer") */
+  open_in_new_tab?: boolean;
+  /** DaisyUI semantic color token (default: "primary") */
+  style?:
+    | 'primary'
+    | 'secondary'
+    | 'accent'
+    | 'neutral'
+    | 'muted'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'ghost';
+  /** Visual appearance modifier (default: "solid") */
+  variant?: 'solid' | 'outline' | 'soft' | 'dash';
+  /** Badge size token (default: "md") */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Text color override token (default: "default") */
+  text_color?: 'default' | 'black' | 'white' | 'primary';
+  /** Optional icon identifier or raw SVG text */
+  icon?: string;
+  /** Position of icon relative to badge text (default: "start") */
+  icon_position?: 'start' | 'end';
+  /** Optional accessible label for screen readers */
+  aria_label?: string;
+  /** Additional CSS utility classes */
+  class?: string;
+  /** SDC prop compatibility alias for class */
+  badge_classes?: string;
+}
+
+const {
+  label = 'Badge',
+  url,
+  open_in_new_tab = false,
+  style = 'primary',
+  variant = 'solid',
+  size = 'md',
+  text_color = 'default',
+  icon,
+  icon_position = 'start',
+  aria_label,
+  class: className = '',
+  badge_classes = '',
+} = Astro.props;
+
+// Determine if this badge acts as an anchor link
+const hasUrl = Boolean(url && url.trim().length > 0);
+
+// Style / Color classes
+const styleClasses: Record<string, string> = {
+  primary: 'badge-primary',
+  secondary: 'badge-secondary',
+  accent: 'badge-accent',
+  neutral: 'badge-neutral',
+  muted: 'bg-base-200 text-base-content border-transparent',
+  info: 'badge-info',
+  success: 'badge-success',
+  warning: 'badge-warning',
+  error: 'badge-error',
+  ghost: 'badge-ghost',
+};
+
+// Size classes
+const sizeClasses: Record<string, string> = {
+  xs: 'badge-xs',
+  sm: 'badge-sm',
+  md: '',
+  lg: 'badge-lg',
+  xl: 'badge-xl',
+};
+
+// Variant modifier classes
+const variantClasses: Record<string, string> = {
+  solid: '',
+  outline: 'badge-outline',
+  soft: 'badge-soft',
+  dash: 'badge-dash',
+};
+
+// Text color override classes
+const textColorClasses: Record<string, string> = {
+  default: '',
+  black: 'text-black!',
+  white: 'text-white!',
+  primary: 'text-primary!',
+};
+
+// Assemble class list
+const classes = [
+  'badge',
+  styleClasses[style] || 'badge-primary',
+  sizeClasses[size] || '',
+  variantClasses[variant] || '',
+  textColorClasses[text_color] || '',
+  hasUrl ? 'cursor-pointer no-underline hover:opacity-90' : '',
+  className,
+  badge_classes,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+{
+  hasUrl ? (
+    <a
+      href={url}
+      class={classes}
+      target={open_in_new_tab ? '_blank' : undefined}
+      rel={open_in_new_tab ? 'noopener noreferrer' : undefined}
+      aria-label={aria_label}
+    >
+      {icon && icon_position === 'start' && (
+        <span class="inline-flex size-[1em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <slot>{label && <span>{label}</span>}</slot>
+      {icon && icon_position === 'end' && (
+        <span class="inline-flex size-[1em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+    </a>
+  ) : (
+    <span class={classes} aria-label={aria_label}>
+      {icon && icon_position === 'start' && (
+        <span class="inline-flex size-[1em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <slot>{label && <span>{label}</span>}</slot>
+      {icon && icon_position === 'end' && (
+        <span class="inline-flex size-[1em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+    </span>
+  )
+}

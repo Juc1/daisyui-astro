@@ -1,0 +1,53 @@
+---
+/**
+ * @file ThemeControllerCircles.astro
+ * @description Five colored circular radio buttons for switching themes with 1:1 parity with
+ * Drupal SDC `daisyui_sdc:theme_controller_circles`.
+ *
+ * Supports themes: Orange, Retro (Pink), Coffee (Brown), Valentine (Pink), and Aqua (Blue).
+ */
+
+export interface ThemeOption {
+  value: string;
+  label: string;
+  color: string;
+}
+
+export interface Props {
+  /** HTML radio group name attribute (default: "theme-radios") */
+  name?: string;
+  /** Optional custom themes list with color hex values */
+  themes?: ThemeOption[];
+  /** Additional CSS utility classes */
+  class?: string;
+}
+
+const defaultThemes: ThemeOption[] = [
+  { value: 'orange', label: 'Orange', color: '#FF8F00' },
+  { value: 'retro', label: 'Retro (Pink)', color: '#FF9FA0' },
+  { value: 'coffee', label: 'Coffee (Brown)', color: '#DB924C' },
+  { value: 'valentine', label: 'Valentine (Pink)', color: '#F43098' },
+  { value: 'aqua', label: 'Aqua (Blue)', color: '#13ECF3' },
+];
+
+const {
+  name = 'theme-radios',
+  themes = defaultThemes,
+  class: className = '',
+} = Astro.props;
+---
+
+<fieldset class={`fieldset flex flex-row flex-wrap justify-between w-full p-2 md:p-4 rounded-box ${className}`}>
+  {
+    themes.map((theme) => (
+      <input
+        type="radio"
+        name={name}
+        class="theme-controller w-8 h-8 md:!w-10 md:!h-10 rounded-full border-2 border-white cursor-pointer hover:scale-110 transition-transform checked:ring-2 checked:ring-offset-2 checked:ring-white"
+        style={`background-color: ${theme.color}; appearance: none;`}
+        value={theme.value}
+        aria-label={theme.label}
+      />
+    ))
+  }
+</fieldset>

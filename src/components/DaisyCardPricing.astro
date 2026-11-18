@@ -1,0 +1,135 @@
+---
+/**
+ * @file DaisyCardPricing.astro
+ * @description Semantic DaisyUI pricing card component with 1:1 parity with Drupal SDC
+ * `daisyui_sdc:daisy-card-pricing`.
+ *
+ * Supports promotional highlights (ring, scale, badge), theme overrides (data-theme),
+ * price display, feature description, and slotted CTA buttons.
+ */
+
+export interface Props {
+  /** Plan heading title (e.g. "Professional Plan") */
+  heading_text?: string;
+  /** Plan description or feature list */
+  description?: string;
+  /** Price display text (e.g. "$49/mo") */
+  price?: string;
+  /** Promotional highlight badge text (e.g. "Most Popular") */
+  badge_text?: string;
+  /** Highlight and promote this card with elevation and badge (default: false) */
+  promote?: boolean;
+  /** Background color variant (default: "default") */
+  variant?: 'default' | 'subtle' | 'primary' | 'neutral';
+  /** Card border style modifier (default: "default") */
+  style_modifier?: 'default' | 'bordered' | 'dash';
+  /** Header alignment (default: "left") */
+  header_align?: 'left' | 'center';
+  /** Optional theme override token (data-theme) */
+  theme?: string;
+  /** Additional CSS utility classes */
+  class?: string;
+}
+
+const {
+  heading_text,
+  description,
+  price,
+  badge_text,
+  promote = false,
+  variant = 'default',
+  style_modifier = 'default',
+  header_align = 'left',
+  theme = 'default',
+  class: className = '',
+} = Astro.props;
+
+// Background variant mapping
+const bgClasses: Record<string, string> = {
+  default: 'bg-card text-card-foreground hover:bg-primary hover:text-white hover:border-primary',
+  subtle: 'bg-base-200 text-base-content hover:bg-primary hover:text-white hover:border-primary',
+  primary: 'bg-primary text-white hover:bg-primary/85',
+  neutral: 'bg-neutral text-neutral-content hover:bg-neutral/90',
+};
+
+// Style modifier mapping
+const styleClasses: Record<string, string> = {
+  default: 'shadow-lg border border-border/60 hover:shadow-xl',
+  bordered: 'card-bordered border-2 border-border hover:border-primary',
+  dash: 'card-dash border-2 border-dashed border-border hover:border-primary',
+};
+
+// Alignment mapping
+const alignClasses: Record<string, string> = {
+  left: 'text-left items-start',
+  center: 'text-center items-center',
+};
+
+// Assemble card classes
+const classes = [
+  'card',
+  'group',
+  'relative',
+  'flex',
+  'flex-col',
+  'transition-all',
+  'duration-300',
+  'h-full',
+  bgClasses[variant] || bgClasses.default,
+  styleClasses[style_modifier] || styleClasses.default,
+  promote ? 'ring-2 ring-primary border-primary shadow-xl scale-[1.02] z-10' : '',
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<article class={classes} data-theme={theme && theme !== 'default' ? theme : undefined}>
+  {
+    promote && badge_text && (
+      <div class="absolute -top-3 right-6 z-20">
+        <span class="badge badge-primary font-semibold shadow-sm px-3 py-2 text-xs uppercase tracking-wider">
+          {badge_text}
+        </span>
+      </div>
+    )
+  }
+
+  <div class="card-body p-6 md:p-8 flex flex-col flex-grow">
+    <header class={`flex flex-col gap-3 ${alignClasses[header_align] || 'text-left'}`}>
+      {
+        heading_text && (
+          <h3 class="text-[1.375rem] leading-tight font-bold text-inherit text-center w-full transition-colors duration-300 group-hover:text-white">
+            {heading_text}
+          </h3>
+        )
+      }
+
+      {
+        description && (
+          <div class="text-base leading-relaxed opacity-90 text-inherit transition-colors duration-300 group-hover:text-white hover:text-white [&_*]:group-hover:text-white [&_*]:hover:text-white" set:html={description} />
+        )
+      }
+    </header>
+
+    <div class="mt-auto pt-6 flex flex-col gap-4">
+      {
+        price && (
+          <div class="border-t border-border/60 group-hover:border-white/40 pt-4 transition-colors duration-300 text-center">
+            <div class="flex items-baseline justify-center gap-2 text-center">
+              <h4 class="text-3xl lg:text-4xl 2xl:text-[2.25rem] font-bold tracking-tight leading-none text-inherit text-center transition-colors duration-300 group-hover:text-white [&_sup]:!text-[60%]">
+                {price}
+              </h4>
+            </div>
+          </div>
+        )
+      }
+
+      <footer class={`card-actions w-full ${header_align === 'center' ? 'justify-center' : 'justify-start'} empty:hidden`}>
+        <slot name="footer">
+          <slot />
+        </slot>
+      </footer>
+    </div>
+  </div>
+</article>

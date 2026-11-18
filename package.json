@@ -1,6 +1,6 @@
 {
   "name": "daisyui-astro",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "DaisyUI components for Astro, providing 1:1 parity with Drupal daisyui-sdc",
   "main": "./src/index.ts",

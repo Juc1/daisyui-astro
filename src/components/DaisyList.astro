@@ -1,0 +1,177 @@
+---
+/**
+ * @file DaisyList.astro
+ * @description DaisyUI 5 list component with 1:1 parity with Drupal SDC `daisyui_sdc:daisy-list`.
+ *
+ * Supports styles (clean, divided, boxed), spacing (tight, normal, relaxed),
+ * typography sizes, custom leading icons with color and sizing tokens, and accepts either
+ * an array of items, rich HTML markup with <li> elements, or slot content.
+ */
+
+export interface Props {
+  /** Rich HTML text or list items string */
+  text?: string;
+  /** Array of item strings (convenient programmatic alternative to text prop) */
+  items?: string[];
+  /** Visual display style (default: "clean") */
+  style?: 'clean' | 'divided' | 'boxed';
+  /** Vertical item spacing (default: "normal") */
+  spacing?: 'tight' | 'normal' | 'relaxed';
+  /** Typography size modifier (default: "lg") */
+  text_size?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Optional bullet/leading icon name or SVG (default: "✓") */
+  icon?: string;
+  /** Leading icon color token (default: "primary") */
+  icon_color?:
+    | 'default'
+    | 'primary'
+    | 'secondary'
+    | 'accent'
+    | 'neutral'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error';
+  /** Leading icon size (default: "sm") */
+  icon_size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Additional CSS utility classes */
+  class?: string;
+  /** SDC prop compatibility alias for class */
+  list_classes?: string;
+}
+
+const {
+  text = '',
+  items,
+  style = 'clean',
+  spacing = 'normal',
+  text_size = 'lg',
+  icon = '✓',
+  icon_color = 'primary',
+  icon_size = 'sm',
+  class: className = '',
+  list_classes = '',
+} = Astro.props;
+
+// Wrapper styles
+const styleWrapperClasses: Record<string, string> = {
+  clean: 'bg-transparent',
+  divided: 'bg-transparent',
+  boxed: 'bg-base-100 rounded-box shadow-sm border border-base-300',
+};
+
+// Text size classes
+const textSizeClasses: Record<string, string> = {
+  sm: 'text-sm!',
+  md: 'text-base!',
+  lg: 'text-base! md:text-lg! xl:text-xl!',
+  xl: 'text-lg! md:text-xl! xl:text-2xl!',
+};
+
+// Icon color classes
+const iconColorClasses: Record<string, string> = {
+  default: 'text-current',
+  primary: 'text-primary',
+  secondary: 'text-secondary',
+  accent: 'text-accent',
+  neutral: 'text-neutral',
+  info: 'text-info',
+  success: 'text-success',
+  warning: 'text-warning',
+  error: 'text-error',
+};
+
+// Icon size classes
+const iconSizeClasses: Record<string, string> = {
+  xs: 'size-4 mt-[0.35em]',
+  sm: 'size-5 mt-[0.3em]',
+  md: 'size-6 mt-[0.25em]',
+  lg: 'size-7 mt-[0.2em]',
+  xl: 'size-8 mt-[0.15em]',
+};
+
+// Spacing classes
+const cleanSpacingClasses: Record<string, string> = {
+  tight: 'px-0! py-1! gap-2.5!',
+  normal: 'px-0! py-1.5! gap-3!',
+  relaxed: 'px-0! py-2.5! gap-3.5!',
+};
+
+const dividedSpacingClasses: Record<string, string> = {
+  tight: 'py-2! gap-3!',
+  normal: 'py-3! gap-3.5!',
+  relaxed: 'py-4! gap-4!',
+};
+
+// Row item classes
+const rowClasses = [
+  'list-row',
+  'items-start',
+  style === 'clean' ? `after:hidden! rounded-none! ${cleanSpacingClasses[spacing] || cleanSpacingClasses.normal}` : '',
+  style === 'divided' ? `px-0! rounded-none! ${dividedSpacingClasses[spacing] || dividedSpacingClasses.normal}` : '',
+  style === 'boxed' ? (dividedSpacingClasses[spacing] || dividedSpacingClasses.normal) : '',
+]
+  .filter(Boolean)
+  .join(' ');
+
+// Icon wrapper classes
+const iconWrapperClasses = [
+  'inline-flex shrink-0 items-center justify-center [&>svg]:size-full',
+  iconColorClasses[icon_color] || 'text-primary',
+  iconSizeClasses[icon_size] || iconSizeClasses.sm,
+]
+  .filter(Boolean)
+  .join(' ');
+
+// List wrapper classes
+const classes = [
+  'list',
+  'list-none',
+  'ps-0',
+  'text-base-content',
+  styleWrapperClasses[style] || 'bg-transparent',
+  textSizeClasses[text_size] || textSizeClasses.lg,
+  className,
+  list_classes,
+]
+  .filter(Boolean)
+  .join(' ');
+
+// Parse items from either items array, HTML <li> tags, or single item text
+const parsedItems: string[] = [];
+if (items && Array.isArray(items) && items.length > 0) {
+  parsedItems.push(...items);
+} else if (text) {
+  if (text.includes('<li')) {
+    const rawParts = text.split('<li').slice(1);
+    for (const part of rawParts) {
+      const afterOpen = part.split('>').slice(1).join('>');
+      const itemHtml = afterOpen.split('</li>')[0].trim();
+      if (itemHtml) {
+        parsedItems.push(itemHtml);
+      }
+    }
+  } else {
+    parsedItems.push(text);
+  }
+}
+---
+
+<ul class={classes}>
+  {
+    parsedItems.length > 0 ? (
+      parsedItems.map((item) => (
+        <li class={rowClasses}>
+          {icon && icon !== 'none' && (
+            <span class={iconWrapperClasses} aria-hidden="true">
+              {icon}
+            </span>
+          )}
+          <div class="list-col-grow leading-relaxed [&_p]:mb-1 [&_p:last-child]:mb-0" set:html={item} />
+        </li>
+      ))
+    ) : (
+      <slot />
+    )
+  }
+</ul>

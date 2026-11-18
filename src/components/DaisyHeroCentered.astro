@@ -1,0 +1,214 @@
+---
+/**
+ * @file DaisyHeroCentered.astro
+ * @description DaisyUI centered hero banner with 1:1 parity with Drupal SDC
+ * `daisyui_sdc:daisy-hero-centered`.
+ *
+ * Supports background image with dark overlay presets, text highlighting via [bracket] syntax,
+ * min-height presets, content max-width, CTA buttons, and slot-based composition.
+ */
+
+export interface MediaProps {
+  src: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface Props {
+  /** Optional background image media object */
+  background_media?: MediaProps;
+  /** Darkening overlay opacity preset (default: "none") */
+  overlay_opacity?: 'none' | '20' | '40' | '50' | '60' | '80';
+  /** Background surface color when no image is used (default: "base-200") */
+  background_color?:
+    | 'base-200'
+    | 'base-100'
+    | 'base-300'
+    | 'neutral'
+    | 'primary'
+    | 'transparent';
+  /** Minimum container height preset (default: "medium") */
+  min_height?: 'screen' | 'large' | 'medium' | 'small' | 'auto';
+  /** Content column maximum width preset (default: "lg") */
+  content_max_width?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  /** Horizontal alignment of content (default: "center") */
+  text_align?: 'center' | 'left';
+  /** Theme override token (data-theme) */
+  data_theme?: string;
+  /** Headline title string. Text in [brackets] is highlighted */
+  title?: string;
+  /** Semantic color for [highlighted] words (default: "primary") */
+  title_highlight_color?:
+    | 'primary'
+    | 'secondary'
+    | 'accent'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error';
+  /** HTML heading level (1-6, default: 1) */
+  title_level?: 1 | 2 | 3 | 4 | 5 | 6;
+  /** Body copy text or HTML */
+  text?: string;
+  /** Primary CTA button label */
+  cta_text?: string;
+  /** Primary CTA destination URL */
+  cta_url?: string;
+  /** Additional CSS utility classes */
+  class?: string;
+}
+
+const {
+  background_media,
+  overlay_opacity = 'none',
+  background_color = 'base-200',
+  min_height = 'medium',
+  content_max_width = 'lg',
+  text_align = 'center',
+  data_theme,
+  title,
+  title_highlight_color = 'primary',
+  title_level = 1,
+  text,
+  cta_text,
+  cta_url,
+  class: className = '',
+} = Astro.props;
+
+const isCentered = text_align === 'center';
+const hasBgImage = Boolean(background_media?.src);
+
+// Height preset mapping
+const heightMap: Record<string, string> = {
+  screen: 'min-h-screen',
+  large: 'min-h-[70vh]',
+  medium: 'min-h-[50vh]',
+  small: 'min-h-[35vh]',
+  auto: 'min-h-fit py-12 md:py-20',
+};
+
+// Background color mapping
+const bgMap: Record<string, string> = {
+  'base-200': 'bg-base-200 text-base-content',
+  'base-100': 'bg-base-100 text-base-content',
+  'base-300': 'bg-base-300 text-base-content',
+  neutral: 'bg-neutral text-neutral-content',
+  primary: 'bg-primary text-primary-content',
+  transparent: 'bg-transparent text-base-content',
+};
+
+// Max width mapping
+const maxWMap: Record<string, string> = {
+  sm: 'max-w-md',
+  md: 'max-w-xl',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+  '2xl': 'max-w-6xl',
+  full: 'w-full',
+};
+
+// Overlay opacity mapping
+const overlayMap: Record<string, string> = {
+  '20': 'bg-black/20',
+  '40': 'bg-black/40',
+  '50': 'bg-black/50',
+  '60': 'bg-black/60',
+  '80': 'bg-black/80',
+};
+
+// Heading tag and sizing
+const HeadingTag = `h${title_level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+const titleSizeMap: Record<string, string> = {
+  h1: 'text-3xl sm:text-5xl lg:text-6xl',
+  h2: 'text-2xl sm:text-4xl lg:text-5xl',
+  h3: 'text-xl sm:text-3xl lg:text-4xl',
+  h4: 'text-lg sm:text-2xl lg:text-3xl',
+  h5: 'text-base sm:text-xl lg:text-2xl',
+  h6: 'text-base sm:text-lg lg:text-xl',
+};
+
+const highlightColorMap: Record<string, string> = {
+  primary: 'text-primary',
+  secondary: 'text-secondary',
+  accent: 'text-accent',
+  info: 'text-info',
+  success: 'text-success',
+  warning: 'text-warning',
+  error: 'text-error',
+};
+
+const hlClass = highlightColorMap[title_highlight_color] || 'text-primary';
+
+// Parse [highlighted] brackets in title
+interface TitleSegment {
+  text: string;
+  isHighlight: boolean;
+}
+const titleSegments: TitleSegment[] = [];
+if (title) {
+  const parts = title.split('[');
+  titleSegments.push({ text: parts[0], isHighlight: false });
+  for (let i = 1; i < parts.length; i++) {
+    const chunk = parts[i];
+    if (chunk.includes(']')) {
+      const [hl, rest] = chunk.split(']');
+      titleSegments.push({ text: hl, isHighlight: true });
+      if (rest) {
+        titleSegments.push({ text: rest, isHighlight: false });
+      }
+    } else {
+      titleSegments.push({ text: `[${chunk}`, isHighlight: false });
+    }
+  }
+}
+
+const classes = [
+  'hero',
+  'not-prose',
+  'relative',
+  'w-full',
+  'overflow-hidden',
+  heightMap[min_height] || 'min-h-[50vh]',
+  !hasBgImage ? bgMap[background_color] || bgMap['base-200'] : 'text-neutral-content',
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+
+const bgStyle = hasBgImage
+  ? `background-image: url(${background_media?.src}); background-size: cover; background-position: center;`
+  : undefined;
+---
+
+<div class={classes} style={bgStyle} data-theme={data_theme && data_theme !== 'default' ? data_theme : undefined}>
+  {hasBgImage && overlay_opacity !== 'none' && <div class={`hero-overlay ${overlayMap[overlay_opacity] || 'bg-black/40'}`} />}
+
+  <div class={`hero-content max-w-none w-full px-4 py-8 md:py-12 ${isCentered ? 'text-center' : 'text-left'}`}>
+    <div class={`flex flex-col gap-4 md:gap-6 ${isCentered ? 'items-center mx-auto' : 'items-start'} ${maxWMap[content_max_width] || 'max-w-2xl'}`}>
+      <slot>
+        {
+          title && (
+            <HeadingTag class={`${titleSizeMap[HeadingTag] || titleSizeMap.h1} font-bold tracking-tight`}>
+              {titleSegments.map((segment) =>
+                segment.isHighlight ? <span class={hlClass}>{segment.text}</span> : segment.text
+              )}
+            </HeadingTag>
+          )
+        }
+
+        {text && <div class="py-2 text-lg md:text-xl opacity-90 [&_p]:mb-2 [&_p:last-child]:mb-0" set:html={text} />}
+
+        {
+          cta_text && cta_url && (
+            <div class="mt-2 flex flex-wrap gap-3">
+              <a href={cta_url} class="btn btn-primary">
+                {cta_text}
+              </a>
+            </div>
+          )
+        }
+      </slot>
+    </div>
+  </div>
+</div>

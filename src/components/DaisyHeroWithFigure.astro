@@ -1,0 +1,250 @@
+---
+/**
+ * @file DaisyHeroWithFigure.astro
+ * @description Two-column DaisyUI hero component with figure image with 1:1 parity with Drupal SDC
+ * `daisyui_sdc:daisy-hero-with-figure`.
+ *
+ * Supports figure position swapping (left/right), responsive column order, layout ratios
+ * (1:1, 1:2, 2:1), rounded image corner presets, aspect ratios, and smart button layout
+ * (0 CTAs omitted, 1 CTA centered, 2 CTAs responsive stack/inline).
+ */
+
+export interface MediaProps {
+  src: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface Props {
+  /** Side media image object */
+  media?: MediaProps;
+  /** Media placement side (default: "left") */
+  media_position?: 'left' | 'right';
+  /** Mobile layout order (default: "media-first") */
+  mobile_order?: 'media-first' | 'content-first';
+  /** Two-column split ratio (default: "1:1") */
+  layout_ratio?: '1:1' | '1:2' | '2:1';
+  /** Media aspect ratio preset (default: "auto") */
+  media_aspect_ratio?: 'auto' | '1:1' | '4:3' | '3:2' | '16:9';
+  /** Media corner rounding preset (default: "medium") */
+  media_radius?: 'none' | 'small' | 'medium' | 'large' | 'full';
+  /** Background surface token (default: "base-200") */
+  background_color?:
+    | 'base-200'
+    | 'base-100'
+    | 'base-300'
+    | 'neutral'
+    | 'primary'
+    | 'transparent';
+  /** Minimum container height preset (default: "medium") */
+  min_height?: 'screen' | 'large' | 'medium' | 'small' | 'auto';
+  /** Theme override token (data-theme) */
+  data_theme?: string;
+  /** Hero headline title */
+  title?: string;
+  /** HTML heading level (1-6, default: 1) */
+  title_level?: 1 | 2 | 3 | 4 | 5 | 6;
+  /** Descriptive body copy (text or HTML) */
+  text?: string;
+  /** Primary CTA button label */
+  cta_text?: string;
+  /** Primary CTA destination URL */
+  cta_url?: string;
+  /** Primary CTA color token (default: "primary") */
+  cta_style?: 'primary' | 'secondary' | 'accent' | 'neutral' | 'ghost' | 'link';
+  /** Primary CTA variant modifier (default: "solid") */
+  cta_variant?: 'solid' | 'outline' | 'soft' | 'dash';
+  /** Secondary CTA button label */
+  cta2_text?: string;
+  /** Secondary CTA destination URL */
+  cta2_url?: string;
+  /** Secondary CTA color token (default: "neutral") */
+  cta2_style?: 'primary' | 'secondary' | 'accent' | 'neutral' | 'ghost' | 'link';
+  /** Secondary CTA variant modifier (default: "outline") */
+  cta2_variant?: 'solid' | 'outline' | 'soft' | 'dash';
+  /** Additional CSS utility classes */
+  class?: string;
+}
+
+const {
+  media,
+  media_position = 'left',
+  mobile_order = 'media-first',
+  layout_ratio = '1:1',
+  media_aspect_ratio = 'auto',
+  media_radius = 'medium',
+  background_color = 'base-200',
+  min_height = 'medium',
+  data_theme,
+  title = 'Engage Your Audience',
+  title_level = 1,
+  text = '<p>Deliver a compelling summary of your value proposition with a clear call to action.</p>',
+  cta_text = 'Get Started',
+  cta_url = '#',
+  cta_style = 'primary',
+  cta_variant = 'solid',
+  cta2_text,
+  cta2_url,
+  cta2_style = 'neutral',
+  cta2_variant = 'outline',
+  class: className = '',
+} = Astro.props;
+
+const isMediaRight = media_position === 'right';
+const isMobileReverse = mobile_order === 'content-first';
+
+// Height presets
+const heightMap: Record<string, string> = {
+  screen: 'min-h-screen',
+  large: 'min-h-[70vh]',
+  medium: 'min-h-[50vh]',
+  small: 'min-h-[35vh]',
+  auto: 'min-h-fit py-12 md:py-20',
+};
+
+// Background colors
+const bgMap: Record<string, string> = {
+  'base-200': 'bg-base-200 text-base-content',
+  'base-100': 'bg-base-100 text-base-content',
+  'base-300': 'bg-base-300 text-base-content',
+  neutral: 'bg-neutral text-neutral-content',
+  primary: 'bg-primary text-primary-content',
+  transparent: 'bg-transparent text-base-content',
+};
+
+// Aspect ratios
+const aspectMap: Record<string, string> = {
+  '1:1': 'aspect-1/1',
+  '4:3': 'aspect-4/3',
+  '3:2': 'aspect-3/2',
+  '16:9': 'aspect-16/9',
+};
+
+// Corner rounding
+const radiusMap: Record<string, string> = {
+  none: 'rounded-none',
+  small: 'rounded-sm',
+  medium: 'rounded-2xl',
+  large: 'rounded-3xl',
+  full: 'rounded-full',
+};
+
+// Split ratios
+const splitRatios: Record<string, { media: string; content: string }> = {
+  '1:1': { media: 'lg:flex-1 lg:basis-1/2', content: 'lg:flex-1 lg:basis-1/2' },
+  '1:2': { media: 'lg:flex-1 lg:basis-1/3', content: 'lg:flex-1 lg:basis-2/3' },
+  '2:1': { media: 'lg:flex-1 lg:basis-2/3', content: 'lg:flex-1 lg:basis-1/3' },
+};
+const activeSplit = splitRatios[layout_ratio] || splitRatios['1:1'];
+
+// Content layout classes
+const contentLayoutClasses = `${isMobileReverse ? 'flex-col-reverse' : 'flex-col'} ${isMediaRight ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-8 lg:gap-16`;
+
+// Heading tag and sizing
+const HeadingTag = `h${title_level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+const titleSizeMap: Record<string, string> = {
+  h1: 'text-3xl sm:text-5xl lg:text-5xl',
+  h2: 'text-2xl sm:text-4xl lg:text-4xl',
+  h3: 'text-xl sm:text-3xl lg:text-3xl',
+  h4: 'text-lg sm:text-2xl lg:text-2xl',
+  h5: 'text-base sm:text-xl lg:text-xl',
+  h6: 'text-base sm:text-lg lg:text-lg',
+};
+
+// CTAs evaluation
+const hasCta1 = Boolean(cta_text && cta_url);
+const hasCta2 = Boolean(cta2_text && cta2_url);
+const ctaCount = (hasCta1 ? 1 : 0) + (hasCta2 ? 1 : 0);
+
+const styleMap: Record<string, string> = {
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  accent: 'btn-accent',
+  neutral: 'btn-neutral',
+  ghost: 'btn-ghost',
+  link: 'btn-link',
+};
+
+const variantMap: Record<string, string> = {
+  solid: '',
+  outline: 'btn-outline',
+  soft: 'btn-soft',
+  dash: 'btn-dash',
+};
+
+const classes = [
+  'hero',
+  'not-prose',
+  'relative',
+  'w-full',
+  'overflow-hidden',
+  heightMap[min_height] || 'min-h-[50vh]',
+  bgMap[background_color] || bgMap['base-200'],
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<div class={classes} data-theme={data_theme && data_theme !== 'default' ? data_theme : undefined}>
+  <div class={`hero-content max-w-none w-full px-4 py-8 md:py-12 ${contentLayoutClasses}`}>
+    {
+      media?.src && (
+        <div class={`shrink-0 w-full ${activeSplit.media}`}>
+          <div class={`w-full overflow-hidden shadow-2xl ${radiusMap[media_radius] || 'rounded-2xl'} ${aspectMap[media_aspect_ratio] || ''}`}>
+            <img
+              src={media.src}
+              alt={media.alt || ''}
+              class={`w-full ${media_aspect_ratio === 'auto' ? 'h-auto' : 'h-full'} object-cover`}
+              width={media.width}
+              height={media.height}
+              loading="eager"
+            />
+          </div>
+        </div>
+      )
+    }
+
+    <div class={`flex flex-col gap-4 md:gap-6 items-start text-left ${activeSplit.content} w-full`}>
+      {
+        title && (
+          <HeadingTag class={`${titleSizeMap[HeadingTag] || titleSizeMap.h1} font-bold tracking-tight`}>
+            {title}
+          </HeadingTag>
+        )
+      }
+
+      {text && <div class="py-2 text-base md:text-lg opacity-90 [&_p]:mb-2 [&_p:last-child]:mb-0" set:html={text} />}
+
+      {
+        ctaCount === 1 && (
+          <div class="mt-2 flex w-full justify-center">
+            {hasCta1 ? (
+              <a href={cta_url} class={`btn ${styleMap[cta_style] || 'btn-primary'} ${variantMap[cta_variant] || ''}`}>
+                {cta_text}
+              </a>
+            ) : (
+              <a href={cta2_url} class={`btn ${styleMap[cta2_style] || 'btn-neutral'} ${variantMap[cta2_variant] || 'btn-outline'}`}>
+                {cta2_text}
+              </a>
+            )}
+          </div>
+        )
+      }
+
+      {
+        ctaCount === 2 && (
+          <div class="mt-2 flex w-full flex-col md:flex-row gap-3 md:gap-4 items-center justify-center md:justify-start">
+            <a href={cta_url} class={`btn ${styleMap[cta_style] || 'btn-primary'} ${variantMap[cta_variant] || ''} w-full md:w-auto text-center`}>
+              {cta_text}
+            </a>
+            <a href={cta2_url} class={`btn ${styleMap[cta2_style] || 'btn-neutral'} ${variantMap[cta2_variant] || 'btn-outline'} w-full md:w-auto text-center`}>
+              {cta2_text}
+            </a>
+          </div>
+        )
+      }
+    </div>
+  </div>
+</div>

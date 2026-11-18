@@ -1,0 +1,148 @@
+---
+/**
+ * @file DaisyDrawer.astro
+ * @description DaisyUI slide-over drawer and mobile navigation component with 1:1 parity with
+ * Drupal SDC `daisyui_sdc:daisy-drawer`.
+ *
+ * Features swap toggle (list/hamburger and close), backdrop overlay, sliding side panel,
+ * and slots for desktop/main content, drawer items, and footer actions.
+ */
+
+export interface Props {
+  /** Unique HTML id for the drawer checkbox input (default: "mobile-drawer") */
+  id?: string;
+  /** Title heading shown in drawer header (default: "Menu") */
+  title?: string;
+  /** Side from which drawer slides out (default: "end") */
+  position?: 'end' | 'start';
+  /** Trigger button style role (default: "ghost") */
+  button_style?: 'ghost' | 'primary' | 'secondary' | 'accent' | 'neutral';
+  /** Trigger button shape (default: "circle") */
+  button_shape?: 'circle' | 'square' | 'default';
+  /** Trigger button size (default: "md") */
+  button_size?: 'sm' | 'md' | 'lg';
+  /** Drawer sliding panel width class (default: "w-80") */
+  drawer_width?: string;
+  /** Open hamburger icon SVG or string */
+  icon_open?: string;
+  /** Close icon SVG or string */
+  icon_close?: string;
+  /** Trigger button extra classes (default: "md:hidden") */
+  button_classes?: string;
+  /** Outer container utility classes */
+  utility_classes?: string;
+  /** Show close button in drawer header (default: true) */
+  show_close_button?: boolean;
+  /** Additional CSS utility classes */
+  class?: string;
+}
+
+const {
+  id = 'mobile-drawer',
+  title = 'Menu',
+  position = 'end',
+  button_style = 'ghost',
+  button_shape = 'circle',
+  button_size = 'md',
+  drawer_width = 'w-80',
+  icon_open,
+  icon_close,
+  button_classes = 'md:hidden',
+  utility_classes = '',
+  show_close_button = true,
+  class: className = '',
+} = Astro.props;
+
+const isEnd = position === 'end';
+
+const buttonClassesList = [
+  'btn',
+  'cursor-pointer',
+  button_style !== 'default' ? `btn-${button_style}` : '',
+  button_shape !== 'default' ? `btn-${button_shape}` : '',
+  button_size !== 'md' ? `btn-${button_size}` : '',
+  'swap swap-rotate',
+  button_classes,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<div class={`drawer ${isEnd ? 'drawer-end' : ''} ${utility_classes} ${className}`} data-daisy-drawer>
+  {/* Hidden toggle checkbox */}
+  <input id={id} type="checkbox" class="drawer-toggle" aria-label="Toggle navigation drawer" />
+
+  {/* Drawer Content Area (Header / Desktop Menu / Trigger) */}
+  <div class="drawer-content flex items-center justify-end w-full">
+    <slot name="content" />
+
+    {/* Hamburger / Swap Trigger Button */}
+    <label for={id} class={buttonClassesList} aria-label="Toggle navigation" data-drawer-trigger>
+      {/* Hamburger icon (shown when closed) */}
+      <span class="swap-off flex items-center justify-center">
+        {
+          icon_open ? (
+            <span set:html={icon_open} />
+          ) : (
+            <svg class="size-6 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+              <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z" />
+            </svg>
+          )
+        }
+      </span>
+      {/* Close icon (shown when open) */}
+      <span class="swap-on flex items-center justify-center">
+        {
+          icon_close ? (
+            <span set:html={icon_close} />
+          ) : (
+            <svg class="size-6 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+              <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+            </svg>
+          )
+        }
+      </span>
+    </label>
+  </div>
+
+  {/* Slide-over Drawer Side */}
+  <div class="drawer-side z-50">
+    {/* Clickable backdrop overlay */}
+    <label for={id} class="drawer-overlay" aria-label="Close drawer"></label>
+
+    {/* Drawer Panel */}
+    <div class={`bg-base-100 text-base-content min-h-full ${drawer_width} p-6 flex flex-col justify-between shadow-2xl`}>
+      <div class="flex flex-col gap-4">
+        {/* Drawer Header */}
+        <div class="flex items-center justify-between border-b border-base-300 pb-4">
+          <span class="font-bold text-lg text-base-content">{title}</span>
+          {
+            show_close_button && (
+              <label for={id} class="btn btn-ghost btn-circle btn-sm cursor-pointer" aria-label="Close menu">
+                <svg class="size-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+                  <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                </svg>
+              </label>
+            )
+          }
+        </div>
+
+        {/* Drawer Body / Items Slot */}
+        <nav class="flex flex-col gap-2">
+          <slot name="drawer_content">
+            <slot />
+          </slot>
+        </nav>
+      </div>
+
+      {/* Optional Actions Slot */}
+      {
+        Astro.slots.has('actions') && (
+          <div class="pt-6 border-t border-base-300">
+            <slot name="actions" />
+          </div>
+        )
+      }
+    </div>
+  </div>
+</div>

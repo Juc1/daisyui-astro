@@ -1,0 +1,96 @@
+---
+/**
+ * @file DaisyDivider.astro
+ * @description Universal DaisyUI visual divider component with 1:1 parity with Drupal SDC
+ * `daisyui_sdc:daisy-divider`.
+ *
+ * Supports orientation (vertical, horizontal, responsive-md, responsive-lg),
+ * color tokens, alignment positioning (start, center, end), icon/text content,
+ * and slot composition. Renders a solid line when content is empty.
+ */
+
+export interface Props {
+  /** Optional text displayed inside the divider line (e.g. "OR") */
+  text?: string;
+  /** Semantic color token (default: "default") */
+  color?:
+    | 'default'
+    | 'neutral'
+    | 'primary'
+    | 'secondary'
+    | 'accent'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error';
+  /** Divider orientation direction (default: "vertical") */
+  direction?: 'vertical' | 'horizontal' | 'responsive-md' | 'responsive-lg';
+  /** Alignment of content within the divider (default: "center") */
+  position?: 'center' | 'start' | 'end';
+  /** Optional icon name or raw SVG text */
+  icon?: string;
+  /** Additional CSS utility classes */
+  class?: string;
+  /** SDC prop compatibility alias for class */
+  divider_classes?: string;
+}
+
+const {
+  text = '',
+  color = 'default',
+  direction = 'vertical',
+  position = 'center',
+  icon,
+  class: className = '',
+  divider_classes = '',
+} = Astro.props;
+
+// Color class mapping
+const colorClasses: Record<string, string> = {
+  default: '',
+  neutral: 'divider-neutral',
+  primary: 'divider-primary',
+  secondary: 'divider-secondary',
+  accent: 'divider-accent',
+  info: 'divider-info',
+  success: 'divider-success',
+  warning: 'divider-warning',
+  error: 'divider-error',
+};
+
+// Direction class mapping
+const directionClasses: Record<string, string> = {
+  vertical: '',
+  horizontal: 'divider-horizontal',
+  'responsive-md': 'md:divider-horizontal',
+  'responsive-lg': 'lg:divider-horizontal',
+};
+
+// Position class mapping
+const positionClasses: Record<string, string> = {
+  center: '',
+  start: 'divider-start',
+  end: 'divider-end',
+};
+
+// Assemble class list
+const classes = [
+  'divider',
+  colorClasses[color] || '',
+  directionClasses[direction] || '',
+  positionClasses[position] || '',
+  className,
+  divider_classes,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<div class={classes}>
+  {icon && (
+    <span class="inline-flex size-[1.25em] shrink-0 items-center justify-center [&>svg]:size-full" aria-hidden="true">
+      {icon}
+    </span>
+  )}
+  <slot>{text && <span>{text}</span>}</slot>
+</div>
